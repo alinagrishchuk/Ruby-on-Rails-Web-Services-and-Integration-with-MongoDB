@@ -62,11 +62,20 @@ end
 
 Racer.reset
 racer = Racer.collection
+
 racer.find(number: {:$type => 2}).each do |r|
   racer.update_one({:_id => r[:_id]},
                    {:$set => {:number => r[:number].to_i}})
 end
-
-if (Racer.collection.find(number: {:$type=>2}).count == 0)
+if Racer.collection.find(number: {:$type=>16}).count ==
+    Racer.collection.find.count
   p "Well done! Column 'number' has only integer values"
 end
+
+Racer.collection.find(gender: $nil).
+    update_many(:$set=>{:gender=>"F"})
+if Racer.collection.find(gender:$nil).count == 0
+  p "Well done! Column 'gender' has not nil value"
+end
+
+
