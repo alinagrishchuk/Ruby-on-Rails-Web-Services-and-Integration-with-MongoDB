@@ -96,7 +96,7 @@ class Solution
     #place solution here
     Solution.collection.
         find.aggregate([
-                         {:$group =>
+                         { :$group =>
                               { :_id => { age: '$group' , gender: '$gender'},
                                 last_names: { :$push => '$last_name' } }
                          }])
@@ -106,7 +106,7 @@ class Solution
     #place solution here
     Solution.collection.
         find.aggregate([
-                         {:$group =>
+                         { :$group =>
                               { :_id => { age: '$group' , gender: '$gender'},
                                 last_names: { :$addToSet => '$last_name' } }
                          }])
@@ -117,10 +117,29 @@ class Solution
   #
   def groups_faster_than criteria_time
     #place solution here
+    Solution.collection.
+        find.aggregate([
+                         { :$group =>
+                              { :_id => { age: '$group' , gender: '$gender'},
+                                runners: {:$sum => 1}, fastest_time: {:$min => '$secs'} }
+                         },
+                         { :$match =>
+                               { fastest_time: { :$lte => criteria_time } }}
+                       ])
   end
 
   def age_groups_faster_than age_group, criteria_time
     #place solution here
+    Solution.collection.
+        find.aggregate([
+                         {:$match =>
+                              { :group => age_group }},
+                         {:$group =>
+                              { :_id => { age: '$group' , gender: '$gender'},
+                                runners: {:$sum => 1}, fastest_time: {:$min => '$secs'} }
+                         },
+                         {:$match => { fastest_time: { :$lte => criteria_time } }}
+                       ])
   end
 
 
@@ -141,3 +160,4 @@ file_path= "../student-start/race_results.json"
 puts "cannot find bootstrap at #{file_path}" if !File.exists?(file_path)
 Solution.reset(file_path)
 s=Solution.new
+racers=Solution.collection
