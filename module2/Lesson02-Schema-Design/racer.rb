@@ -79,3 +79,18 @@ if Racer.collection.find(gender:$nil).count == 0
 end
 
 
+racers=Racer.collection
+racers.find(:name=>{:$exists=>true}).each do |r|
+  matches=/(\w+) (\w+)/.match r[:name]
+  first_name=matches[1]
+  last_name=matches[2]
+  racers.update_one({:_id=>r[:_id]},
+                    {:$set=>{:first_name=>first_name, :last_name=>last_name},
+                     :$unset=>{:name=>""}})
+end
+
+if racers.find(:name=>{:$exists=>false},
+    :first_name=>{:$exists=>true},
+    :last_name=>{:$exists=>true}).count ==  Racer.collection.find.count
+  p "Well done! Column 'name' is splitted"
+end
