@@ -63,34 +63,56 @@ end
 Racer.reset
 racer = Racer.collection
 
+#Consistent Field Types
 racer.find(number: {:$type => 2}).each do |r|
   racer.update_one({:_id => r[:_id]},
                    {:$set => {:number => r[:number].to_i}})
 end
-if Racer.collection.find(number: {:$type=>16}).count ==
-    Racer.collection.find.count
-  p "Well done! Column 'number' has only integer values"
-end
 
+Racer.reset
+racer = Racer.collection
+
+#Consistent Fields Supplied
 Racer.collection.find(gender: $nil).
     update_many(:$set=>{:gender=>"F"})
-if Racer.collection.find(gender:$nil).count == 0
-  p "Well done! Column 'gender' has not nil value"
-end
 
+Racer.reset
+racers = Racer.collection
 
-racers=Racer.collection
+#Normalized Fields
 racers.find(:name=>{:$exists=>true}).each do |r|
-  matches=/(\w+) (\w+)/.match r[:name]
-  first_name=matches[1]
-  last_name=matches[2]
+  matches = /(\w+) (\w+)/.match r[:name]
+  first_name = matches[1]
+  last_name = matches[2]
   racers.update_one({:_id=>r[:_id]},
                     {:$set=>{:first_name=>first_name, :last_name=>last_name},
                      :$unset=>{:name=>""}})
 end
 
-if racers.find(:name=>{:$exists=>false},
-    :first_name=>{:$exists=>true},
-    :last_name=>{:$exists=>true}).count ==  Racer.collection.find.count
-  p "Well done! Column 'name' is splitted"
+Racer.reset
+racers = Racer.racers_collection
+races = Racer.races_collection
+
+#Creating a Linked Relationship
+races.find(:name=>{:$exists=>true}).each do |r|
+  result = racers.update_one({:name=>r[:name]}, {:name=>r[:name]}, {:upsert=>true})
+  id = result.upserted_id
+  races.update_one({:_id=>r[:_id]},{:$set=>{:racer_id=>id},:$unset=>{:name=>""}})
+end
+
+Racer.reset
+racers = Racer.racers_collection
+races = Racer.races_collection
+
+#Creating an Embedded Relationship
+races.find(:name=>{:$exists=>true}).each do |r|
+  result = racers.update_one( { :name => r[:name]} ,
+                           { :name=>r[:name],
+                             :races=>[
+                                { :_id=>r[:_id],
+                                  :number => r[:number],
+                                  :group => r[:group],
+                                  :time => r[:time] }
+                            ]},   { :upsert => true} )
+  races.find(:_id=>r[:_id]).delete_one
 end
