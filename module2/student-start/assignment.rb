@@ -148,10 +148,24 @@ class Solution
   #
   def avg_family_time last_name
     #place solution here
+    Solution.collection.
+        find.aggregate([
+                         {:$match => {:last_name => last_name}},
+                         {:$group => {:_id => '$last_name', :avg_time => {:$avg => '$secs'},
+                                      :numbers => {:$push => '$number' }}}
+                       ])
   end
   
   def number_goal last_name
     #place solution here
+    Solution.collection.
+        find.aggregate([
+                           {:$match => {:last_name => last_name}},
+                           {:$group => {:_id => '$last_name', :avg_time => {:$avg => '$secs'},
+                                        :numbers => {:$push => '$number' }}},
+                           {:$unwind => '$numbers'},
+                           {:$project=>{_id:0, :number=>"$numbers", avg_time:1, last_name:"$_id"}}
+                       ])
   end
 
 end
@@ -159,5 +173,4 @@ end
 file_path= "../student-start/race_results.json"
 puts "cannot find bootstrap at #{file_path}" if !File.exists?(file_path)
 Solution.reset(file_path)
-s=Solution.new
-racers=Solution.collection
+solution=Solution.new
