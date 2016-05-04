@@ -70,9 +70,11 @@ class Solution
   def concat_names
     #place solution here
     Solution.collection.
-        find.aggregate([ :$project=> { :_id => 0 ,:number => 1,
-                                       :name => { :$concat => ['$last_name', ', ', '$first_name'] }
-    }])
+        find.aggregate([
+                         :$project=>
+                           { :_id => 0 ,:number => 1,
+                                     :name => { :$concat => ['$last_name', ', ', '$first_name'] }
+                           }])
   end
 
   #
@@ -82,14 +84,32 @@ class Solution
 
   def group_times
     #place solution here
+    Solution.collection.
+        find.aggregate([
+                         {:$group =>
+                              { :_id => { age: '$group' , gender: '$gender'},
+                                runners: {:$sum => 1}, fastest_time: {:$min => '$secs'} }
+                         }])
   end
 
   def group_last_names
     #place solution here
+    Solution.collection.
+        find.aggregate([
+                         {:$group =>
+                              { :_id => { age: '$group' , gender: '$gender'},
+                                last_names: { :$push => '$last_name' } }
+                         }])
   end
 
   def group_last_names_set
     #place solution here
+    Solution.collection.
+        find.aggregate([
+                         {:$group =>
+                              { :_id => { age: '$group' , gender: '$gender'},
+                                last_names: { :$addToSet => '$last_name' } }
+                         }])
   end
 
   #
@@ -121,7 +141,3 @@ file_path= "../student-start/race_results.json"
 puts "cannot find bootstrap at #{file_path}" if !File.exists?(file_path)
 Solution.reset(file_path)
 s=Solution.new
-racers=Solution.collection
-Solution.collection.
-    find.aggregate([ :$project=> { :_id => 0 ,:number => 1, :name => { :$concat => ['$last_name', ', ', '$first_name'] } }])
-    .each {|r| pp r}
