@@ -20,7 +20,7 @@ class Place
   end
 
   def self.create_indexes
-    Place.collection.indexes.create_one({:'geometry.geolocation' => '2dsphere'})
+    Place.collection.indexes.create_one(:'geometry.geolocation' => '2dsphere')
   end
 
   def self.remove_indexes
@@ -71,7 +71,7 @@ class Place
     Place.collection.aggregate([
       {:$unwind => '$address_components'},
       {:$unwind => '$address_components.types'},
-      {:$project => { address_components: { long_name: 1, types: 1 }}},
+      {:$project => {address_components: {long_name: 1, types: 1}}},
       {:$match => {:"address_components.types" => 'country'}},
       {:$group => {:_id => "$address_components.long_name"}}
     ]).to_a.map {|h| h[:_id]}
@@ -81,7 +81,7 @@ class Place
     Place.collection.
       find.aggregate([
         {:$match => {:'address_components.short_name' => country_code}},
-        {:$project=> { :_id => 1}}
+        {:$project=> {:_id => 1}}
       ]).to_a.map {|h| h[:_id].to_s}
   end
 
@@ -113,6 +113,7 @@ class Place
       Place.near(@location.to_hash,maximum_distance)
     )
   end
+
 
 end
 
