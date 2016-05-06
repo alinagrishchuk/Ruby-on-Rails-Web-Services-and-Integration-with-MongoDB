@@ -1,7 +1,7 @@
 class Point
   attr_accessor :longitude, :latitude
 
-  def initialize ( point = {} )
+  def initialize(point = {})
     if point[:type] == 'Point'              #GeoJSON Point format
       @longitude = point[:coordinates][0]
       @latitude = point[:coordinates][1]
@@ -11,9 +11,9 @@ class Point
   end
 
   def to_hash #GeoJSON Point
-    geoJS = {}
-    geoJS[:type] = 'Point'
-    geoJS[:coordinates] = [@longitude,@latitude]
-    geoJS
+    geo_js = {}
+    geo_js[:type] = 'Point'
+    geo_js[:coordinates] = [@longitude,@latitude]
+    geo_js
   end
 end
