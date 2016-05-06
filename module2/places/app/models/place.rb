@@ -19,6 +19,14 @@ class Place
      end
   end
 
+  def self.create_indexes
+    Place.collection.indexes.create_one({:'geometry.geolocation' => '2dsphere'})
+  end
+
+  def self.remove_indexes
+    Place.collection.indexes.drop_one('geometry.geolocation_2dsphere')
+  end
+
   def self.find_by_short_name(short_name)
     Place.collection.find(:'address_components.short_name' => short_name)
   end
@@ -77,6 +85,13 @@ class Place
       ]).to_a.map {|h| h[:_id].to_s}
   end
 
+  def self.near(point, max_meters = nil)
+    pipe = {:$near => point.to_hash}
+    pipe[:$maxDistance] = max_meters unless max_meters.nil?
+    Place.collection.find('geometry.geolocation': pipe)
+
+  end
+
   def initialize(place)
     @id = place[:_id].to_s
     @formatted_address = place[:formatted_address]
@@ -85,12 +100,18 @@ class Place
     @address_components = []
     place[:address_components].each do |address_component|
       @address_components << (AddressComponent.new address_component)
-    end
+    end unless  place[:address_components].nil?
   end
 
   def destroy
     id =  BSON::ObjectId.from_string(@id)
     Place.collection.find(_id: id).delete_one
+  end
+
+  def near(maximum_distance = nil)
+    Place.to_places(
+      Place.near(@location.to_hash,maximum_distance)
+    )
   end
 
 end
