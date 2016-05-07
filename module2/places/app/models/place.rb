@@ -1,4 +1,6 @@
 class Place
+  include ActiveModel::Model
+
   PLACE_COLLECTION = 'places'
 
   attr_accessor :id, :formatted_address, :location, :address_components
@@ -16,7 +18,7 @@ class Place
       Place.collection.delete_many
       js_collection = JSON.parse( f.read )
       Place.collection.insert_many js_collection
-     end
+    end
   end
 
   def self.create_indexes
@@ -54,11 +56,11 @@ class Place
 
   def self.get_address_components(sort = {}, offset = 0, limit = nil)
     pipe =
-      [{:$unwind => '$address_components'},
-       {:$project =>
-         {:address_components => 1,
-          :formatted_address => 1,
-          :'geometry.geolocation' => 1}}]
+    [{:$unwind => '$address_components'},
+     {:$project =>
+      {:address_components => 1,
+       :formatted_address => 1,
+       :'geometry.geolocation' => 1}}]
 
     pipe << {:$sort => sort} unless sort.length == 0
     pipe << {:$skip => offset} unless offset == 0
@@ -69,20 +71,20 @@ class Place
 
   def self.get_country_names
     Place.collection.aggregate([
-      {:$unwind => '$address_components'},
-      {:$unwind => '$address_components.types'},
-      {:$project => {address_components: {long_name: 1, types: 1}}},
-      {:$match => {:"address_components.types" => 'country'}},
-      {:$group => {:_id => "$address_components.long_name"}}
-    ]).to_a.map {|h| h[:_id]}
+                               {:$unwind => '$address_components'},
+                               {:$unwind => '$address_components.types'},
+                               {:$project => {address_components: {long_name: 1, types: 1}}},
+                               {:$match => {:"address_components.types" => 'country'}},
+                               {:$group => {:_id => "$address_components.long_name"}}
+                               ]).to_a.map {|h| h[:_id]}
   end
 
   def self.find_ids_by_country_code(country_code)
     Place.collection.
-      find.aggregate([
-        {:$match => {:'address_components.short_name' => country_code}},
-        {:$project=> {:_id => 1}}
-      ]).to_a.map {|h| h[:_id].to_s}
+    find.aggregate([
+                   {:$match => {:'address_components.short_name' => country_code}},
+                   {:$project=> {:_id => 1}}
+                   ]).to_a.map {|h| h[:_id].to_s}
   end
 
   def self.near(point, max_meters = nil)
@@ -103,6 +105,10 @@ class Place
     end unless  place[:address_components].nil?
   end
 
+  def persisted?
+    !@id.nil?
+  end
+
   def destroy
     id =  BSON::ObjectId.from_string(@id)
     Place.collection.find(_id: id).delete_one
@@ -110,13 +116,16 @@ class Place
 
   def near(maximum_distance = nil)
     Place.to_places(
-      Place.near(@location.to_hash,maximum_distance)
+    Place.near(@location.to_hash,maximum_distance)
     )
+  end
+  def photos(offset=0, limit=nil)
+    if @id
+      result = Photo.find_photos_for_place(@id).skip(offset)
+      result = result.limit(limit) unless limit.nil?
+      result.map {|p| Photo.new p}
+    end
   end
 
 
 end
-
-
-
-
