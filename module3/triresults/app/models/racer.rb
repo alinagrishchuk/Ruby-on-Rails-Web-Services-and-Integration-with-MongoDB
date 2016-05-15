@@ -7,3 +7,4 @@ class Racer
     racer.info.id = racer.id
   end
 end
+
