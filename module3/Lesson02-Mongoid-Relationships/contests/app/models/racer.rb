@@ -6,7 +6,9 @@ class Racer
   field :dob, as: :date_of_birth, type: Date
 
   embeds_one :primary_address,  class_name: 'Address', as: :addressable
-  has_one :medical_record
+  has_one :medical_record, dependent: :destroy
+
+  validates :first_name, :last_name, presence: true
 
   def races
     if self.id
