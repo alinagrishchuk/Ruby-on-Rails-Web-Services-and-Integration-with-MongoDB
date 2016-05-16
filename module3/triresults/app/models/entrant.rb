@@ -11,9 +11,13 @@ class Entrant
 
   embeds_many :results, class_name: 'LegResult',order: [:'event.o'.asc],
               after_add: :update_total, after_remove: :update_total
+  embeds_one :race, class_name: 'RaceRef'
 
   def update_total(result)
     self.secs = results.inject(0){|sum,x| x.secs ? sum + x.secs : sum}
   end
 
+  def the_race
+    self.race.race if self.race
+  end
 end
