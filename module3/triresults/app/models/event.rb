@@ -1,5 +1,6 @@
 class Event
   include Mongoid::Document
+  include Mongoid::Timestamps
   field :o, as: :order, type: Integer
   field :n, as: :name, type: String
   field :d, as: :distance, type: Float

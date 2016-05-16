@@ -1,6 +1,6 @@
 class Address
   attr_accessor :city, :state, :location
-  def initialize (city, state, location)
+  def initialize(city, state, location)
     @city = city
     @state = state
     @location = location
@@ -12,21 +12,19 @@ class Address
       loc: (@location.mongoize) }
   end
 
-  def self.mongoize object
+  def self.mongoize(object)
     object.instance_of?(Address) ? object.mongoize : object
   end
 
-  def self.demongoize object
-    if object.instance_of?(Hash)
+  def self.demongoize(object)
+    if object.kind_of? (Hash)
       Address.new( object[:city],
                    object[:state],
                    Point.demongoize(object[:loc]) )
     end
   end
 
-  def self.evolve object
+  def self.evolve(object)
     Address.mongoize object
   end
 end
-
-

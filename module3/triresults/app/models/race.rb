@@ -11,6 +11,3 @@ class Race
   scope :upcoming, -> {where(:date.gte =>  Date.today)}
   scope :past, -> {where(:date.lt =>  Date.today)}
 end
-
-
-
